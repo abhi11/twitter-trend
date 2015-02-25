@@ -4,11 +4,27 @@ import urllib
 import httplib
 import base64
 import json
-import ast
 import pprint
 import constants
 
 ### UTILS ###
+
+def json_str_to_json(json_str):
+    """
+    Takes a JSON string and converts it to
+    JSON obj(list dict etc)
+    """
+    return json.loads(json_str)
+
+def get_tweets_from_json(json_data):
+    """
+    Takes a list
+    and returns a list of tweet objects
+    """
+    tweets = list()
+    list_of_tweets = json_str_to_json(json_data)
+
+    return [Tweet(t) for t in list_of_tweets]
 
 def authenticate():
     '''
@@ -34,7 +50,7 @@ def authenticate():
     payload = response.read()
 
     ## Converting the payload string to a dictionary
-    dic = ast.literal_eval(payload)
+    dic = json_str_to_json(payload)
 
     access_token = dic.get("access_token")
     get_headers={"Authorization":"Bearer "+access_token}
@@ -42,24 +58,34 @@ def authenticate():
 
     return get_headers
 
-
-def get_tweets_from_json(json_data):
+def get_trends(authentication_token, geo_location):
     """
-    Takes a list
-    and returns a list of tweet objects
+    Returns trend objects. Expects the geological area
+    for which the trends are to be fetched
     """
-    tweets = list()
-    list_of_tweets = json.loads(json_data)
+    conn = httplib.HTTPSConnection("api.twitter.com")
+    api_url = "/1.1/trends/place.json?id=%s"
+    request = conn.request("GET", api_url % (geo_location),
+                                 "", authentication_token)
 
-    for t in list_of_tweets:
-        tweets.append(tweet(t))
+    response = conn.getresponse()
+    data_received = response.read()
+    conn.close()
 
-    return tweets
+    json_data = json_str_to_json(data_received)
+    trends = json_data[0]['trends']
+
+    # return a list of trend objects
+    return [Trend(t) for t in trends]
+
 
 ##################################### END UTILS ########################################
 
 
-class twitter():
+class UserTimeline():
+    """
+    A class which is used as a user timeline.
+    """
 
     def __init__(self, screename, conn=None):
         """
@@ -77,11 +103,11 @@ class twitter():
         self._conn = httplib.HTTPSConnection("api.twitter.com")
         return self._conn
 
-    def _close_conn():
-        if conn:
+    def _close_conn(self):
+        if self._conn:
             self._conn.close()
 
-    def _fetch_tweets(self,authentication_token, counts):
+    def _fetch_tweets(self, authentication_token, counts):
         """
         Fetches <count> no. of tweets.
         Loads it into json and returns the json object.
@@ -94,16 +120,75 @@ class twitter():
             response = self._conn.getresponse()
             data_received = response.read()
 
-            return data_received
+            # Returns tweet objects
+            return get_tweets_from_json(data_received)
 
         except:
-            print "Some error occurred..."
+            return None
+
+
+class Trend():
+    """
+    Small class for trend.
+    Use to fetch tweets for the trend
+    """
+    def __init__(self, json_data):
+        """
+        Initialize object with a trend
+        """
+        self._trend = json_data
+
+    def _set_conn(self):
+        """
+        Sets the HTTP Connection with twitter api end point.
+        Close the connection, when usage is done
+        """
+        self._conn = httplib.HTTPSConnection("api.twitter.com")
+        return self._conn
+
+    def _close_conn(self):
+        if self._conn:
+            self._conn.close()
+
+    def _get_name(self):
+        """
+        Get name if the trend.
+        """
+        return self._trend['name']
+
+    def _get_query(self):
+        """
+        Returns the URL Encoded name. Use for
+        querying in ither api
+        """
+        return self._trend['query']
+
+    def _fetch_tweets(self, authentication_token, counts):
+        """
+        Fetches tweets for the trend.
+        Expects the geographical area for which the trends
+        are to be fetched. For eg 1 is for world.
+        """
+        api_url = "/1.1/search/tweets.json?q=%s&count=%s"
+        request = self._conn.request("GET", api_url % (self._get_query(), counts),
+                                     "", authentication_token)
+
+        response = self._conn.getresponse()
+        data_received = response.read()
+
+        json_data = json_str_to_json(data_received)
+        statuses = json_data['statuses']
+
+        # Returns tweet objects
+        return [Tweet(status) for status in statuses]
+
+
 
 # add all the attributes as properties
 # will make it more efficient
 # shouldn't calculate if things have
 # been calculated once
-class tweet():
+class Tweet():
     def __init__(self, json_data):
         """
         Initialize the object with the tweet data(json)
@@ -165,18 +250,3 @@ class tweet():
         print "Tweet: " + self._get_tweet()
         print "Retweets: " + str(self._get_retweets())
         print "URLs: " + ", ".join(self._get_urls())
-
-# Test
-if __name__ == "__main__":
-    # use authenticate to get the token
-    token = authenticate()
-    # create a twitter obj with screen_name
-    tc = twitter("abshk11")
-    tc._set_conn()
-    # Use the auth token and no of counts of tweets
-    # for the screen_name(symantec)
-    tweets = get_tweets_from_json(tc._fetch_tweets(token, 3))
-
-    for t in tweets:
-        t._print_details()
-        print "----------------------------------"

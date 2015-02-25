@@ -31,14 +31,43 @@ def test1():
     """
     Tests the twitter class and tweet class
     """
+    print " Test 1 "
     # use authenticate to get the token
     token = authenticate()
-    # create a twitter obj with screen_name
-    tc = twitter("abshk11")
+
+    # create a USerTimeline obj with screen_name
+    tc = UserTimeline("abshk11")
     tc._set_conn()
     # Use the auth token and no of counts of tweets
     # for the screen_name(symantec)
-    tweets = get_tweets_from_json(tc._fetch_tweets(token, 3))
+    tweets = tc._fetch_tweets(token, 3)
+    tc._close_conn()
+
+    for t in tweets:
+        t._print_details()
+        print "----------------------------------"
+
+def test2():
+    """
+    Test the Trend class.
+    """
+    print " Test 2 "
+
+    token = authenticate()
+    # Worldwide trends
+    trends = get_trends(token, 1)
+
+    # print the trends
+    for t in trends:
+        print "Trend: ", t._get_name()
+        print "----------------------------------"
+
+    # Test fetching tweets for a trend
+    first_trend = trends[0]
+    first_trend._set_conn()
+
+    tweets = first_trend._fetch_tweets(token, 5)
+    first_trend._close_conn()
 
     for t in tweets:
         t._print_details()
@@ -46,4 +75,6 @@ def test1():
 
 # Test
 if __name__ == "__main__":
+
     test1()
+    test2()
