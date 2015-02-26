@@ -10,13 +10,13 @@ class https_req:
     def __init__(self, domain):
         self._conn = httplib.HTTPSConnection(domain)
 
-    def _get_conn(self):
+    def get_conn(self):
         """
         Returns connection object.
         """
         return self._conn
 
-    def _make_req(self, uri, request_method, params, headers):
+    def make_req(self, uri, request_method, params, headers):
         """
         Performs request and returns payload.
         Returns None if unsuccessful.
@@ -28,7 +28,7 @@ class https_req:
         payload = response.read()
         return payload
 
-    def _close_conn(self):
+    def close_conn(self):
         """
         Closes connection.
         """

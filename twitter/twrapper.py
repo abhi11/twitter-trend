@@ -3,136 +3,114 @@ import base64
 import json
 import pprint
 import constants
-
-from req import *
-
-#Imports that will fail in 3+
-try:
-    import httplib
-except ImportError:
-    import http.client as httplib
-
+import twitter_constants as t_const
 import urllib
+from req import https_req
 
-### UTILS ###
 
+######################################## UTILS ########################################
 
-def json_str_to_json(json_str):
+def log(s):
     """
-    Takes a JSON string and converts it to
-    JSON obj(list dict etc)
+    Used to print to screen.
+    Can be controlled to be turned off or modified later on.
     """
-    return json.loads(json_str)
-
-def get_tweets_from_json(json_data):
-    """
-    Takes a list
-    and returns a list of tweet objects
-    """
-    tweets = list()
-    list_of_tweets = json_str_to_json(json_data)
-
-    return [Tweet(t) for t in list_of_tweets]
-
-def authenticate():
-    '''
-    Used to auntheticate. Consumer key and secret are
-    pre-defined. Returns the header if succesful else
-    exits.
-    '''
-    #Acquiring the access token
-    domain_name = "api.twitter.com"
-    request_method = "POST"
-    uri = "/oauth2/token/"
-    param = urllib.urlencode({'grant_type':'client_credentials'})
-
-    CONSUMER_KEY=constants.CONSUMER_KEY
-    CONSUMER_SECRET=constants.CONSUMER_SECRET
-    enc_str= base64.b64encode(CONSUMER_KEY+":"+CONSUMER_SECRET)
-    headers = {"Authorization":"Basic "+enc_str,
-               "Content-type": "application/x-www-form-urlencoded;charset=UTF-8"}
-
-    https_obj = https_req(domain_name)
-    payload = https_obj._make_req(uri, request_method, param, headers)
-
-    if payload == None:
-        print "Authentication Failed."
-        return None
-
-    ## Converting the payload string to a dictionary
-
-    dic = json_str_to_json(payload)
-
-    try:
-        dic = json.loads(payload)
-    except ValueError:
-        print "Authentication response Invalid."
-        return None
-
-    access_token = dic.get("access_token")
-    get_headers={"Authorization":"Bearer "+access_token}
-    return get_headers
-
-def get_trends(authentication_token, geo_location):
-    """
-    Returns trend objects. Expects the geological area
-    for which the trends are to be fetched
-    """
-    conn = httplib.HTTPSConnection("api.twitter.com")
-    api_url = "/1.1/trends/place.json?id=%s"
-    request = conn.request("GET", api_url % (geo_location),
-                                 "", authentication_token)
-
-    response = conn.getresponse()
-    data_received = response.read()
-    conn.close()
-
-    json_data = json_str_to_json(data_received)
-    trends = json_data[0]['trends']
-
-    # return a list of trend objects
-    return [Trend(t) for t in trends]
-
+    print(s)
 
 ##################################### END UTILS ########################################
 
+class twrapper:
+    def __init__(self, key, secret):
+        self.__key = key
+        self.__secret = secret
+        self.__https_obj = https_req(t_const.DOMAIN_NAME)
+        token = self.__authenticate()
+        #raise Invalid creds exception here.
+        if token == None:
+            raise Exception("Cannot authenticate key and secret!")
+        else:
+            self.__token = token
+        
+    def __authenticate(self):
+        '''
+        Used to auntheticate. Consumer key and secret are
+        pre-defined. Returns the header if succesful else
+        exits.
+        '''
+        #Acquiring the access token
+        request_method = "POST"
+        uri = t_const.URI_ACCESS_TOKEN
+        param = urllib.urlencode({'grant_type':'client_credentials'})
 
-class UserTimeline():
-    """
-    A class which is used as a user timeline.
-    """
+        CONSUMER_KEY = self.__key
+        CONSUMER_SECRET = self.__secret
+        
+        enc_str= base64.b64encode(CONSUMER_KEY+":"+CONSUMER_SECRET)
+        headers = {"Authorization":"Basic "+enc_str,
+                   "Content-type": "application/x-www-form-urlencoded;charset=UTF-8"}
+        
+        payload = self.__https_obj.make_req(uri, request_method, param, headers)
+        if payload == None:
+            log("Authentication Failed.")
+            return None
+        
+        #Response type is always json
+        #ref - https://dev.twitter.com/oauth/reference/post/oauth2/token
+        try:
+            dic = json.loads(payload)
+        except ValueError:
+            log("Authentication response Invalid.")
+            return None
+        if "errors" in dic or "access_token" not in dic:
+            log("Error in authentication")
+            return None
+        
+        access_token = dic.get("access_token")
+        get_headers={"Authorization":"Bearer "+access_token}
+        return get_headers
 
-    def __init__(self, screename, conn=None):
+    def __get_tweets_from_json(self, json_data):
         """
-        Expects the screen_name for which, the tweets will
-        be fetched.
+        Takes a list
+        and returns a list of tweet objects
         """
-        self._screename = screename
-        self._conn = conn
+        list_of_tweets = json.loads(json_data)
+        return [Tweet(t) for t in list_of_tweets]
+    
+    def get_user_timeline_tweets(self, screen_name, tweet_count):
+        api_url = t_const.API_GET_TWEETS + "?screen_name=%s&count=%s"
+        json_tweets = self.__https_obj.make_req(api_url % (screen_name, tweet_count),"GET", "", self.__token)
+        if json_tweets == None:
+            log("Error in receiving data")
+            return None
+        tweets = self.__get_tweets_from_json(json_tweets)
+        return tweets
 
-    def _set_conn(self):
+    def get_trends(self, geo_location):
         """
-        Sets the HTTP Connection with twitter api end point.
-        Close the connection, when usage is done
+        Returns trend objects. Expects the geological area
+        for which the trends are to be fetched
         """
-        self._conn = https_req("api.twitter.com")
+        api_url = t_const.API_TREND + "?id=%s"
+        json_str = self.__https_obj.make_req(api_url % (geo_location), "GET", "", self.__token)
+        res_data = json.loads(json_str)
+        
+        trends = res_data[0]['trends']
+        # return a list of trend objects
+        return [Trend(t) for t in trends]
 
-
-    def _close_conn(self):
-        if self._conn:
-            self._conn._close_conn()
-
-    def _fetch_tweets(self, authentication_token, counts):
-        """
-        Fetches <count> no. of tweets.
-        Loads it into json and returns the json object.
-        """
-        api_url = "/1.1/statuses/user_timeline.json?screen_name=%s&count=%s"
-        data_received = self._conn._make_req(api_url % (self._screename, counts), "GET",
-                                         "", authentication_token)
+    def get_trends_tweets(self, trend_obj , counts):
+        api_url = t_const.API_TREND_TWEETS + "?q=%s&count=%s"
+        data_received = self.__https_obj.make_req(api_url % (trend_obj._get_query(), counts), "GET",
+                                        "", self.__token)
+        res_data = json.loads(data_received)
+        statuses = res_data['statuses']
         # Returns tweet objects
-        return get_tweets_from_json(data_received)
+        return [Tweet(status) for status in statuses]
 
+    def __del__(self):
+        #Closing the connection.
+        self.__https_obj.close_conn()
 
 class Trend():
     """
@@ -144,17 +122,6 @@ class Trend():
         Initialize object with a trend
         """
         self._trend = json_data
-
-    def _set_conn(self):
-        """
-        Sets the HTTP Connection with twitter api end point.
-        Close the connection, when usage is done
-        """
-        self._conn = https_req("api.twitter.com")
-
-    def _close_conn(self):
-        if self._conn:
-            self._conn._close_conn()
 
     def _get_name(self):
         """
@@ -168,23 +135,6 @@ class Trend():
         querying in ither api
         """
         return self._trend['query']
-
-    def _fetch_tweets(self, authentication_token, counts):
-        """
-        Fetches tweets for the trend.
-        Expects the geographical area for which the trends
-        are to be fetched. For eg 1 is for world.
-        """
-        api_url = "/1.1/search/tweets.json?q=%s&count=%s"
-        data_received = self._conn._make_req(api_url % (self._get_query(), counts), "GET",
-                                        "", authentication_token)
-
-        json_data = json_str_to_json(data_received)
-        statuses = json_data['statuses']
-
-        # Returns tweet objects
-        return [Tweet(status) for status in statuses]
-
 
 # add all the attributes as properties
 # will make it more efficient
@@ -255,3 +205,24 @@ class Tweet():
         print "Tweet: " + self._get_tweet()
         print "Retweets: " + str(self._get_retweets())
         print "URLs: " + ", ".join(self._get_urls())
+
+if __name__ == "__main__":
+    twitter_obj = twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)    
+    screen_name = "abshk11"
+    tweets = twitter_obj.get_user_timeline_tweets(screen_name, 3)
+    for t in tweets:
+        t._print_details()
+        print "----------------------------------"
+
+    trends = twitter_obj.get_trends(1)
+    
+    # print the trends
+    for t in trends:
+        print "Trend: ", t._get_name()
+        print "----------------------------------"
+
+    # Test fetching tweets for a trend
+    tweets = twitter_obj.get_trends_tweets(trends[0],5)
+    for t in tweets:
+        t._print_details()
+        print "----------------------------------"
