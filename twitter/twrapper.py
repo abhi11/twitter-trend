@@ -4,6 +4,8 @@ import json
 import pprint
 import constants
 
+from req import *
+
 #Imports that will fail in 3+
 try:
     import httplib
@@ -31,63 +33,6 @@ def get_tweets_from_json(json_data):
     list_of_tweets = json_str_to_json(json_data)
 
     return [Tweet(t) for t in list_of_tweets]
-
-
-class https_req:
-    def __init__(self, domain):
-        """
-        TODO:
-        Need to make this work for Python 3+
-        """
-        try:
-            self._conn = httplib.HTTPSConnection(domain)
-        except:
-            self._conn = None
-
-    def _get_conn(self):
-        """
-        Returns connection object.
-        """
-        return self._conn
-
-    def _make_req(self, uri, request_method, params, headers):
-        """
-        Performs request and returns payload.
-        Returns None if unsuccessful.
-        Note: This does not close the connection upon exit.
-        TODO:
-        Need to make this work for Python 3+
-        """
-        try:
-            self._conn.request(request_method, uri, params, headers)
-            response=self._conn.getresponse()
-        except:
-            print "Error while performing https request."
-            return None
-        else:
-            payload = response.read()
-            return payload
-
-    def _close_conn(self):
-        """
-        Closes connection.
-        """
-        if self._conn != None:
-            self._conn.close()
-
-def make_https_req(domain, uri, request_method, params, headers):
-    """
-    Performs https requests on the given params.
-    Returns payload if success, None if request failed.
-    """
-
-    conn = get_https_conn(domain)
-    if conn == None:
-        return None
-    payload = make_https_req(conn, uri, request_method, params, headers)
-    conn.close()
-    return payload
-
 
 def authenticate():
     '''
@@ -171,30 +116,22 @@ class UserTimeline():
         Close the connection, when usage is done
         """
         self._conn = https_req("api.twitter.com")
-        return self._conn
+
 
     def _close_conn(self):
         if self._conn:
-            self._conn.close()
+            self._conn._close_conn()
 
     def _fetch_tweets(self, authentication_token, counts):
         """
         Fetches <count> no. of tweets.
         Loads it into json and returns the json object.
         """
-        try:
-            api_url = "/1.1/statuses/user_timeline.json?screen_name=%s&count=%s"
-            request = self._conn.request("GET", api_url % (self._screename, counts),
+        api_url = "/1.1/statuses/user_timeline.json?screen_name=%s&count=%s"
+        data_received = self._conn._make_req(api_url % (self._screename, counts), "GET",
                                          "", authentication_token)
-
-            response = self._conn.getresponse()
-            data_received = response.read()
-
-            # Returns tweet objects
-            return get_tweets_from_json(data_received)
-
-        except:
-            return None
+        # Returns tweet objects
+        return get_tweets_from_json(data_received)
 
 
 class Trend():
@@ -213,12 +150,11 @@ class Trend():
         Sets the HTTP Connection with twitter api end point.
         Close the connection, when usage is done
         """
-        self._conn = httplib.HTTPSConnection("api.twitter.com")
-        return self._conn
+        self._conn = https_req("api.twitter.com")
 
     def _close_conn(self):
         if self._conn:
-            self._conn.close()
+            self._conn._close_conn()
 
     def _get_name(self):
         """
@@ -240,11 +176,8 @@ class Trend():
         are to be fetched. For eg 1 is for world.
         """
         api_url = "/1.1/search/tweets.json?q=%s&count=%s"
-        request = self._conn.request("GET", api_url % (self._get_query(), counts),
-                                     "", authentication_token)
-
-        response = self._conn.getresponse()
-        data_received = response.read()
+        data_received = self._conn._make_req(api_url % (self._get_query(), counts), "GET",
+                                        "", authentication_token)
 
         json_data = json_str_to_json(data_received)
         statuses = json_data['statuses']
