@@ -24,10 +24,27 @@ CONSUMER_KEY = your consumer key
 CONSUMER_SECRET = your consumer secret
 ```
 * CONSUMER_KEY and CONSUMER_SECRET could be acquired by registering an app with Twitter [Here](https://apps.twitter.com/). Login and create a new app ;-)
-* Look at [test.py](https://github.com/abhi11/twitter-trend/blob/master/test.py) to understand how to use the module.
 
 
-## And Example to show the usability.
+## An Example to show the usability.
+Creating a twitter-trend object -
+```
+twitter_obj = twrapper(CONSUMER_KEY, CONSUMER_SECRET)
+```
+what this does is -
+* Authenticates application using key and secret.
+* Stores the obtained token for later requests.
+
+Now you can use this `twitter_obj` to fetch data.
+Let's say you want to fetch the latest couple of tweets from Leonardo DiCaprio, from his Twitter handle - @LeoDiCaprio
+
+```
+tweets = twitter_obj.get_user_timeline_tweets("LeoDiCaprio", 2)
+
+```
+and that's it!
+
+Check out [test.py](https://github.com/abhi11/twitter-trend/blob/master/test.py) which contains examples demonstrating different calls.
 
 ### Time Zone Wise Contribution to trends
 
