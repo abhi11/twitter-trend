@@ -2,7 +2,7 @@
 
 ## Uses the REST API(Version 1.1)
 
-## List of APIs Currently Covered:
+## List of API Currently Covered:
 
 * API to fetch from a User Timeline (statuses/user_timeline)
 * API to fetch current Trends (trends/place)
