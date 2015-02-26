@@ -1,6 +1,6 @@
-# A twitter api wrapper to fetch tweet for a given twitter handle(For a public account)
+# Twitter API wrapper
 
-## Uses the rest api.(Ver 1.1)
+## Uses the REST API(Version 1.1)
 
 ## List of API Currently Covered:
 
@@ -8,6 +8,12 @@
 * API to fetch current Trends (trends/place)
 * API to search tweets for a trend.
 * More will be added
+
+## Things you don't have to worry about
+
+* HTTPS Connnection
+* Correct API URLs
+* Authentication mechanism(Although we need have an app registered)
 
 ## Usage
 
@@ -17,7 +23,8 @@
 CONSUMER_KEY = your consumer key
 CONSUMER_SECRET = your consumer secret
 ```
-* Look at test.py to understand how to use the module.
+* CONSUMER_KEY and CONSUMER_SECRET could be acquired by registering an app with twitter. [Here](https://apps.twitter.com/). Login and create a new app ;-)
+* Look at [test.py](https://github.com/abhi11/twitter-trend/blob/master/test.py) to understand how to use the module.
 
 
 ## And Example to show the usability.
