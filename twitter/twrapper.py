@@ -1,4 +1,29 @@
 #!/usr/bin/env python
+
+"""
+It is the main module, which serves as the wrapper for the APIs.
+It offers a Twrapper class which provides methods to talk to differnt APIs
+and fetch data. Other classes are Tweet and Trend.
+"""
+
+# Copyright (C) 2015  Abhishek Bhattacharjee <abhishek.bhattacharjee11@gmail.com>
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+################################################################################
+
 import base64
 import json
 import pprint
@@ -19,7 +44,7 @@ def log(s):
 
 ##################################### END UTILS ########################################
 
-class twrapper:
+class Twrapper:
     def __init__(self, key, secret):
         self.__key = key
         self.__secret = secret
@@ -30,7 +55,7 @@ class twrapper:
             raise Exception("Cannot authenticate key and secret!")
         else:
             self.__token = token
-        
+
     def __authenticate(self):
         '''
         Used to auntheticate. Consumer key and secret are
@@ -44,16 +69,16 @@ class twrapper:
 
         CONSUMER_KEY = self.__key
         CONSUMER_SECRET = self.__secret
-        
+
         enc_str= base64.b64encode(CONSUMER_KEY+":"+CONSUMER_SECRET)
         headers = {"Authorization":"Basic "+enc_str,
                    "Content-type": "application/x-www-form-urlencoded;charset=UTF-8"}
-        
+
         payload = self.__https_obj.make_req(uri, request_method, param, headers)
         if payload == None:
             log("Authentication Failed.")
             return None
-        
+
         #Response type is always json
         #ref - https://dev.twitter.com/oauth/reference/post/oauth2/token
         try:
@@ -64,7 +89,7 @@ class twrapper:
         if "errors" in dic or "access_token" not in dic:
             log("Error in authentication")
             return None
-        
+
         access_token = dic.get("access_token")
         get_headers={"Authorization":"Bearer "+access_token}
         return get_headers
@@ -76,7 +101,7 @@ class twrapper:
         """
         list_of_tweets = json.loads(json_data)
         return [Tweet(t) for t in list_of_tweets]
-    
+
     def get_user_timeline_tweets(self, screen_name, tweet_count):
         api_url = t_const.API_GET_TWEETS + "?screen_name=%s&count=%s"
         json_tweets = self.__https_obj.make_req(api_url % (screen_name, tweet_count),"GET", "", self.__token)
@@ -94,7 +119,7 @@ class twrapper:
         api_url = t_const.API_TREND + "?id=%s"
         json_str = self.__https_obj.make_req(api_url % (geo_location), "GET", "", self.__token)
         res_data = json.loads(json_str)
-        
+
         trends = res_data[0]['trends']
         # return a list of trend objects
         return [Trend(t) for t in trends]
@@ -205,24 +230,3 @@ class Tweet():
         print "Tweet: " + self._get_tweet()
         print "Retweets: " + str(self._get_retweets())
         print "URLs: " + ", ".join(self._get_urls())
-
-if __name__ == "__main__":
-    twitter_obj = twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)    
-    screen_name = "abshk11"
-    tweets = twitter_obj.get_user_timeline_tweets(screen_name, 3)
-    for t in tweets:
-        t._print_details()
-        print "----------------------------------"
-
-    trends = twitter_obj.get_trends(1)
-    
-    # print the trends
-    for t in trends:
-        print "Trend: ", t._get_name()
-        print "----------------------------------"
-
-    # Test fetching tweets for a trend
-    tweets = twitter_obj.get_trends_tweets(trends[0],5)
-    for t in tweets:
-        t._print_details()
-        print "----------------------------------"

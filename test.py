@@ -34,23 +34,7 @@ def test1():
     Tests the twitter class and tweet class
     """
     print " Test 1 "
-    '''    
-    # use authenticate to get the token
-    token = authenticate()
-
-    # create a USerTimeline obj with screen_name
-    tc = UserTimeline("abshk11")
-    tc._set_conn()
-    # Use the auth token and no of counts of tweets
-    # for the screen_name(symantec)
-    tweets = tc._fetch_tweets(token, 3)
-    tc._close_conn()
-
-    for t in tweets:
-        t._print_details()
-        print "----------------------------------"
-    '''
-    twitter_obj = twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
+    twitter_obj = Twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
     screen_name = "abshk11"
     tweets = twitter_obj.get_user_timeline_tweets(screen_name, 3)
     for t in tweets:
@@ -62,30 +46,10 @@ def test2():
     Test the Trend class.
     """
     print " Test 2 "
-    '''
-    token = authenticate()
-    # Worldwide trends
-    trends = get_trends(token, 1)
 
-    # print the trends
-    for t in trends:
-        print "Trend: ", t._get_name()
-        print "----------------------------------"
-
-    # Test fetching tweets for a trend
-    first_trend = trends[0]
-    first_trend._set_conn()
-
-    tweets = first_trend._fetch_tweets(token, 5)
-    first_trend._close_conn()
-
-    for t in tweets:
-        t._print_details()
-        print "----------------------------------"
-    '''
-    twitter_obj = twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
+    twitter_obj = Twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
     trends = twitter_obj.get_trends(1)
-    
+
     # print the trends
     for t in trends:
         print "Trend: ", t._get_name()
