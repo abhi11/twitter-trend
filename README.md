@@ -24,6 +24,19 @@ CONSUMER_KEY = your consumer key
 CONSUMER_SECRET = your consumer secret
 ```
 * CONSUMER_KEY and CONSUMER_SECRET could be acquired by registering an app with Twitter [Here](https://apps.twitter.com/). Login and create a new app ;-)
+* After adding the above lines in constants.py, come back to the root directory:
+```
+cd ~/twitter-trend/
+```
+* And run
+```
+sudo python setup.py install
+```
+* To check whether installation is done, cd to tests and run the tests.
+```
+cd tests && python test.py
+```
+* The above would also check whether CONSUMER_KEY and CONSUMER_SECRET are valid.
 
 
 ## An Example to show the usability.
@@ -44,7 +57,7 @@ tweets = twitter_obj.get_user_timeline_tweets("LeoDiCaprio", 2)
 ```
 and that's it!
 
-Check out [test.py](https://github.com/abhi11/twitter-trend/blob/master/test.py) which contains examples demonstrating different calls.
+Check out [test.py](https://github.com/abhi11/twitter-trend/blob/master/tests/test.py) which contains examples demonstrating different calls.
 
 ### Time Zone Wise Contribution to trends
 
@@ -55,4 +68,4 @@ Check out [test.py](https://github.com/abhi11/twitter-trend/blob/master/test.py)
 ## TODO
 * Adding more wrapper for different use-cases.
 * Adding wrappers to fetch stale data from db.
-* Making a python module out of this.
+* Remove the dependency on constants.py(ugly). Ask user to provide it directly(For tests read from s specified file given as a command line argument).
