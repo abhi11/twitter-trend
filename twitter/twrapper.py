@@ -41,7 +41,7 @@ def log(s):
     Used to print to screen.
     Can be controlled to be turned off or modified later on.
     """
-    print(s)
+    print s
 
 ##################################### END UTILS ########################################
 
@@ -231,3 +231,23 @@ class Tweet():
         print "Tweet: " + self._get_tweet()
         print "Retweets: " + str(self._get_retweets())
         print "URLs: " + ", ".join(self._get_urls())
+
+    def __str__(self):
+        """
+        Print the properties(not yet props)
+        """
+        print_li = [
+            "Screen Name: " + self._get_screen_name(),
+            "Tweet: " + self._get_tweet(),
+            "Retweets: " + str(self._get_retweets()),
+            "URLs: " + ", ".join(self._get_urls())
+            ]
+        print_s = u'\n'.join(print_li).encode('utf-8').strip()
+        return print_s + "\n" + "-"*34
+
+if __name__ == "__main__":
+    twitter_obj = Twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
+    screen_name = "LeoDiCaprio"
+    tweets = twitter_obj.get_user_timeline_tweets(screen_name, 4)
+    for t in tweets:
+        print t

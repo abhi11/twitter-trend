@@ -1,5 +1,7 @@
 # Twitter API wrapper
 
+This Python application can be used by application developers who intend to consume Application-only authenticated Twitter APIs.
+
 ## Uses the REST API(Version 1.1)
 
 ## List of API Currently Covered:
