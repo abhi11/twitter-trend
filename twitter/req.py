@@ -29,8 +29,6 @@ try:
 except ImportError:
     import http.client as httplib
 
-import urllib
-
 class https_req:
     def __init__(self, domain):
         self._conn = httplib.HTTPSConnection(domain)

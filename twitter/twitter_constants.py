@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 This file consists of only those fields that are specific to
 the Twitter API.

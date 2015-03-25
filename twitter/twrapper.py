@@ -28,10 +28,16 @@ and fetch data. Other classes are Tweet and Trend.
 import base64
 import json
 import pprint
-import constants
-import twitter_constants as t_const
-import urllib
-from req import https_req
+
+try: # if python 2.x
+    from urllib import urlencode
+    from req import https_req
+    import twitter_constants as t_const
+except ImportError: # Python 3.x
+    import urllib
+    from urllib.parse import urlencode
+    from .req import https_req
+    from . import twitter_constants as t_const
 
 
 ######################################## UTILS ########################################
@@ -41,7 +47,7 @@ def log(s):
     Used to print to screen.
     Can be controlled to be turned off or modified later on.
     """
-    print s
+    print(s)
 
 ##################################### END UTILS ########################################
 
@@ -66,14 +72,22 @@ class Twrapper:
         #Acquiring the access token
         request_method = "POST"
         uri = t_const.URI_ACCESS_TOKEN
-        param = urllib.urlencode({'grant_type':'client_credentials'})
+        param = urlencode({'grant_type':'client_credentials'})
 
         CONSUMER_KEY = self.__key
         CONSUMER_SECRET = self.__secret
+        to_encode = CONSUMER_KEY + ":" + CONSUMER_SECRET
 
-        enc_str= base64.b64encode(CONSUMER_KEY+":"+CONSUMER_SECRET)
-        headers = {"Authorization":"Basic "+enc_str,
-                   "Content-type": "application/x-www-form-urlencoded;charset=UTF-8"}
+        try: # 2.x
+            enc_str = base64.b64encode(to_encode)
+        except TypeError: # 3.x
+            enc_bytes = base64.b64encode(bytes(to_encode, 'UTF-8'))
+            enc_str = enc_bytes.decode('UTF-8')
+
+        headers = {
+            'Authorization' : 'Basic ' + enc_str,
+            'Content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        }
 
         payload = self.__https_obj.make_req(uri, request_method, param, headers)
         if payload == None:
@@ -83,7 +97,7 @@ class Twrapper:
         #Response type is always json
         #ref - https://dev.twitter.com/oauth/reference/post/oauth2/token
         try:
-            dic = json.loads(payload)
+            dic = json.loads(payload.decode('UTF-8'))
         except ValueError:
             log("Authentication response Invalid.")
             return None
@@ -100,7 +114,7 @@ class Twrapper:
         Takes a list
         and returns a list of tweet objects
         """
-        list_of_tweets = json.loads(json_data)
+        list_of_tweets = json.loads(json_data.decode('UTF-8'))
         return [Tweet(t) for t in list_of_tweets]
 
     def get_user_timeline_tweets(self, screen_name, tweet_count):
@@ -119,7 +133,7 @@ class Twrapper:
         """
         api_url = t_const.API_TREND + "?id=%s"
         json_str = self.__https_obj.make_req(api_url % (geo_location), "GET", "", self.__token)
-        res_data = json.loads(json_str)
+        res_data = json.loads(json_str.decode('UTF-8'))
 
         trends = res_data[0]['trends']
         # return a list of trend objects
@@ -129,7 +143,7 @@ class Twrapper:
         api_url = t_const.API_TREND_TWEETS + "?q=%s&count=%s"
         data_received = self.__https_obj.make_req(api_url % (trend_obj._get_query(), counts), "GET",
                                         "", self.__token)
-        res_data = json.loads(data_received)
+        res_data = json.loads(data_received.decode('UTF-8'))
         statuses = res_data['statuses']
         # Returns tweet objects
         return [Tweet(status) for status in statuses]
@@ -223,14 +237,11 @@ class Tweet():
 
         return usable_urls
 
-    def _print_details(self):
+    def _get_time_zone(self):
         """
-        Print the properties(not yet props)
+        Gives the time zone of the tweet
         """
-        print "Screen Name: " + self._get_screen_name()
-        print "Tweet: " + self._get_tweet()
-        print "Retweets: " + str(self._get_retweets())
-        print "URLs: " + ", ".join(self._get_urls())
+        return self._tweet['time_zone']
 
     def __str__(self):
         """
@@ -242,12 +253,10 @@ class Tweet():
             "Retweets: " + str(self._get_retweets()),
             "URLs: " + ", ".join(self._get_urls())
             ]
-        print_s = u'\n'.join(print_li).encode('utf-8').strip()
-        return print_s + "\n" + "-"*34
 
-if __name__ == "__main__":
-    twitter_obj = Twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
-    screen_name = "LeoDiCaprio"
-    tweets = twitter_obj.get_user_timeline_tweets(screen_name, 4)
-    for t in tweets:
-        print t
+        try: #python 2
+            print_s = '\n'.join(print_li).encode('utf-8').strip()
+            return print_s + '\n' + '-'*34
+        except:
+            print_s = '\n'.join(print_li)
+            return print_s + '\n' + '-'*34
