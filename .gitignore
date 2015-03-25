@@ -7,4 +7,5 @@
 #*
 constants.py
 *.pyc
-build/
+build/*
+test.py

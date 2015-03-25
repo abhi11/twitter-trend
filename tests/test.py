@@ -26,41 +26,40 @@ with comments for better undertsanding.
 ################################################################################
 
 from twitter.twrapper import *
-import twitter.constants as constants
-
+from twitter import constants
 
 
 def test1():
     """
     Tests the twitter class and tweet class
     """
-    print " Test 1 "
+    print(" Test 1 ")
     twitter_obj = Twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
     screen_name = "abshk11"
     tweets = twitter_obj.get_user_timeline_tweets(screen_name, 3)
     for t in tweets:
-        t._print_details()
-        print "----------------------------------"
+        print(t)
+        print("----------------------------------")
 
 def test2():
     """
     Test the Trend class.
     """
-    print " Test 2 "
+    print(" Test 2 ")
 
     twitter_obj = Twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
     trends = twitter_obj.get_trends(1)
 
     # print the trends
     for t in trends:
-        print "Trend: ", t._get_name()
-        print "----------------------------------"
+        print("Trend: ", t._get_name())
+        print("----------------------------------")
 
     # Test fetching tweets for a trend
     tweets = twitter_obj.get_trends_tweets(trends[0],5)
     for t in tweets:
-        t._print_details()
-        print "----------------------------------"
+        print(t)
+        print("----------------------------------")
 
 # Test
 if __name__ == "__main__":
