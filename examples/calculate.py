@@ -29,11 +29,11 @@ import pdb
 
 client = MongoClient('localhost', 27017)
 db = client.test_database
-data = db.try1.find()
+data = db.tests.find()
 current_trend=[]
 country=[]
 
-trend_list=db.try1.distinct('trend')
+trend_list=db.tests.distinct('trend')
 
 i=0
 while(i < len(trend_list)):
@@ -46,11 +46,11 @@ while(i < len(trend_list)):
             country[i][d['location']]=1
     i+=1
 
-print "----------------Trends and time-zone wise contribution-------------"
+print("----------------Trends and time-zone wise contribution-------------")
 i=0
 while i < len(country):
     print "Trend: ",trend_list[i]
     for loc,count in country[i].iteritems():
         print loc," : ",count
-    print "---------------------------------"
+    print("---------------------------------")
     i+=1

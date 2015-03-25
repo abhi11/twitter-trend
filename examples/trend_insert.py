@@ -22,14 +22,8 @@ Takes 100 tweets and puts it in the database
 
 ################################################################################
 
-import urllib
-import httplib
-import base64
-import json
-import ast
-
 from pymongo import MongoClient
-from twitter import constants
+from twitter import twrapper, constants
 
 def put_into_database(trendname,screename,text,loc=None):
     try:
@@ -38,96 +32,43 @@ def put_into_database(trendname,screename,text,loc=None):
         screen_name = db.tests.find_one({"trend":trendname,"screename":screename,"text":text})
         if not(screen_name):
             if loc:
-                db.try1.insert({"trend":trendname,"screename":screename,"text":text,"location":loc})
+                db.tests.insert({"trend":trendname,"screename":screename,"text":text,"location":loc})
             else:
-                db.try1.insert({"trend":trendname,"screename":screename,"text":text,"location":"Others"})
-            print "-----****Gone into the database"
+                db.tests.insert({"trend":trendname,"screename":screename,"text":text,"location":"Others"})
+            print("Gone into the database")
 
         else:
-            print "------****Already present"
+            print("Already present")
     except:
-        print "database error"
+        print("database error")
 
 
-def get_info_for_trends(x,count=None):
-    #printing each trending topic/person etc
-    print "\n-----------Tweets for :" + x['name'] + "--------------"
-    print x['query']
-    if  not(count):
-        conn.request("GET","/1.1/search/tweets.json?q="+str(x['query']),"",get_headers)
-    else:
-        conn.request("GET","/1.1/search/tweets.json?q="+str(x['query'])+"&count=100","",get_headers)
+def get_info_for_trends(trend, count=None):
+    """
+    get tweets for a trend and put them to the db
+    """
+    tw_obj = twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
 
-    tweets_resp = conn.getresponse()
-    tweets = tweets_resp.read()
-    tweets_json = json.loads(str(tweets))
-    i=1
+    tweeets = tw_obj.get_trends_tweets(trend, 100)
 
-    for s in tweets_json['statuses']:
-
-        # printing names of users and tweets for each trending topic
-        print str(i)+". " +s['user']['name'].encode('utf-8')
-        print s['text'].encode('utf-8')
-        location = s['user']['location']
-        time_zone = s['user']['time_zone']
-        place = s['place']
-
-        if time_zone:
-            put_into_database(x['name'],s['user']['screen_name'],s['text'],time_zone)
+    for t in tweets:
+        location = t._get_location()
+        time_zone = t._get_time_zone()
+        if location:
+            put_into_database(trend._get_name(), t._get_screen_name(),
+                              t._get_tweet(), location)
+        elif time_zone:
+            put_into_database(trend._get_name(), t._get_screen_name(),
+                              t._get_tweet(), time_zone)
         else:
-            put_into_database(x['name'],s['user']['screen_name'],s['text'])
-        i=i+1
+            put_into_database(trend._get_name(), t._get_screen_name(),
+                              t._get_tweet())
 
-CONSUMER_KEY = constants.CONSUMER_KEY
-CONSUMER_SECRET = constants.CONSUMER_SECRET
+def main():
+    """
+    Creates a twrapper object
+    """
+    t_object = twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
+    trends = t_object.get_trends(1)
 
-enc_str= base64.b64encode(CONSUMER_KEY+":"+CONSUMER_SECRET)
-
-
-if __name__ == "__main__":
-
-    print CONSUMER_KEY, CONSUMER_KEY, enc_str
-    exit()
-
-    try:
-        conn = httplib.HTTPSConnection("api.twitter.com")
-
-        # Acquiring the access token
-        param = urllib.urlencode({'grant_type':'client_credentials'})
-        headers = {"Authorization":"Basic "+enc_str,
-                   "Content-type": "application/x-www-form-urlencoded;charset=UTF-8"}
-
-
-        conn.request("POST","/oauth2/token/",param,headers)
-        response=conn.getresponse()
-        payload = response.read()
-
-        # Converting the payload string to a dictionary
-        dic = ast.literal_eval(payload)
-        access_token = dic.get("access_token")
-
-        get_headers={"Authorization":"Bearer "+access_token}
-
-        # Getting WorldWide Trends
-        conn.request("GET","/1.1/trends/place.json?id=1","",get_headers)
-        get_resp = conn.getresponse()
-        sample = get_resp.read()
-
-        # converting the received string in JSON form
-        data = json.loads(str(sample))
-        names = data[0]['trends']
-
-        print "-----------------------------Trends-----------------------------------"
-        for x in names:
-            try:
-                get_info_for_trends(x,"100")
-            except:
-                try:
-                    get_info_for_trends(x)
-                except:
-                    print "Error.... :( "
-
-    except:
-        print "something went wrong :("
-
-    print "\n"
+    for trend in trends:
