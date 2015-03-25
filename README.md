@@ -16,6 +16,7 @@ This Python application can be used by application developers who intend to cons
 * HTTPS Connnection
 * Correct API URLs
 * Authentication mechanism(Although, one needs to have an app registered with Twitter)
+* Most importantly, python version it works on both 2.x and 3.x
 
 ## Usage
 
