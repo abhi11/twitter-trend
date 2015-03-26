@@ -13,14 +13,17 @@ This Python application can be used by application developers who intend to cons
 
 ## Things you don't have to worry about
 
-* HTTPS Connnection
-* Correct API URLs
-* Authentication mechanism(Although, one needs to have an app registered with Twitter)
-* Most importantly, python version it works on both 2.x and 3.x
+* HTTPS Connnection.
+* Correct API URLs.
+* Authentication mechanism(Although, one needs to have an app registered with Twitter).
+* Most importantly, python version, it works on both 2.x and 3.x
 
 ## Usage
 
-* Clone the repo first and create a constants.py under twitter directory.
+* Clone the repo first.
+```
+cd twitter-trend/ && touch twitter/constants.py
+```
 * Add the following in the above created file
 ```
 CONSUMER_KEY = your consumer key
@@ -29,7 +32,7 @@ CONSUMER_SECRET = your consumer secret
 * CONSUMER_KEY and CONSUMER_SECRET could be acquired by registering an app with Twitter [Here](https://apps.twitter.com/). Login and create a new app ;-)
 * After adding the above lines in constants.py, come back to the root directory:
 ```
-cd ~/twitter-trend/
+cd ~/twitter-trend
 ```
 * And run
 ```
