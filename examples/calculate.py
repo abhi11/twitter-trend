@@ -2,6 +2,10 @@
 
 """
 calculates time-zone contribution for each trending topic
+Ideally the data should be dumped in Mongo and queried out and
+molded to a Twrapper object and calculation should be done.
+But, currently the data trimmed and put into the db, so that
+it becomes easy for this script.
 """
 
 # Copyright (C) 2015  Abhishek Bhattacharjee <abhishek.bhattacharjee11@gmail.com>
@@ -20,9 +24,6 @@ calculates time-zone contribution for each trending topic
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
-import json
-import pprint as pp
 from pymongo import MongoClient
 
 client = MongoClient('localhost', 27017)

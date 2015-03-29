@@ -48,7 +48,8 @@ cd tests && python test.py
 ## An Example to show the usability.
 Creating a twitter-trend object -
 ```
-twitter_obj = twrapper(CONSUMER_KEY, CONSUMER_SECRET)
+from twitter.twrapper import *
+twitter_obj = Twrapper(CONSUMER_KEY, CONSUMER_SECRET)
 ```
 what this does is -
 * Authenticates application using key and secret.
