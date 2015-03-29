@@ -24,33 +24,28 @@ calculates time-zone contribution for each trending topic
 import json
 import pprint as pp
 from pymongo import MongoClient
-from bson.objectid import ObjectId as objid
-import pdb
 
 client = MongoClient('localhost', 27017)
 db = client.test_database
 data = db.tests.find()
-current_trend=[]
-country=[]
+trend_contributions = dict() # dict for {trend1 : {loc1 : count, loc2 : count}, trend2 : {loc1 : count, loc2 : count}, ...}
 
-trend_list=db.tests.distinct('trend')
+trends = db.tests.distinct('trend')
 
-i=0
-while(i < len(trend_list)):
-    data = db.tests.find({'trend':trend_list[i]})
-    country.append({})
+for trend in trends:
+    data = db.tests.find({'trend' : trend})
+    trend_contributions[trend] = {} # new dict for each trend
+
     for d in data:
-        if country[i].get(d['location']):
-            country[i][d['location']]+=1
+        if trend_contributions[trend].get(d['location']):
+            trend_contributions[trend][d['location']] += 1
         else:
-            country[i][d['location']]=1
-    i+=1
+            trend_contributions[trend][d['location']] = 1
 
 print("----------------Trends and time-zone wise contribution-------------")
-i=0
-while i < len(country):
-    print("Trend: ",trend_list[i])
-    for loc,count in country[i].items():
-        print(loc," : ",count)
+
+for key in trend_contributions.keys():
+    print("Trend: ",key)
+    for loc, count in trend_contributions.get(key).items():
+        print(loc, " : ", count)
     print("---------------------------------")
-    i = i + 1
