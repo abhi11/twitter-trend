@@ -241,7 +241,13 @@ class Tweet():
         """
         Gives the time zone of the tweet
         """
-        return self._tweet['time_zone']
+        return self._get_user()['time_zone']
+
+    def _get_json_data(self):
+        """
+        Gives back the real JSON data
+        """
+        return self._tweet
 
     def __str__(self):
         """

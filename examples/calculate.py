@@ -37,7 +37,7 @@ trend_list=db.tests.distinct('trend')
 
 i=0
 while(i < len(trend_list)):
-    data = db.try1.find({'trend':trend_list[i]})
+    data = db.tests.find({'trend':trend_list[i]})
     country.append({})
     for d in data:
         if country[i].get(d['location']):
@@ -49,8 +49,8 @@ while(i < len(trend_list)):
 print("----------------Trends and time-zone wise contribution-------------")
 i=0
 while i < len(country):
-    print "Trend: ",trend_list[i]
-    for loc,count in country[i].iteritems():
-        print loc," : ",count
+    print("Trend: ",trend_list[i])
+    for loc,count in country[i].items():
+        print(loc," : ",count)
     print("---------------------------------")
-    i+=1
+    i = i + 1

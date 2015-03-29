@@ -23,7 +23,8 @@ Takes 100 tweets and puts it in the database
 ################################################################################
 
 from pymongo import MongoClient
-from twitter import twrapper, constants
+from twitter.twrapper import *
+from twitter import constants
 
 def put_into_database(trendname,screename,text,loc=None):
     try:
@@ -47,11 +48,15 @@ def get_info_for_trends(trend, count=None):
     """
     get tweets for a trend and put them to the db
     """
-    tw_obj = twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
+    tw_obj = Twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
 
-    tweeets = tw_obj.get_trends_tweets(trend, 100)
+    if count:
+        tweets = tw_obj.get_trends_tweets(trend, count)
+    else:
+        tweets = tw_obj.get_trends_tweets(trend, 100)
 
     for t in tweets:
+        print(t._get_json_data())
         location = t._get_location()
         time_zone = t._get_time_zone()
         if location:
@@ -68,7 +73,15 @@ def main():
     """
     Creates a twrapper object
     """
-    t_object = twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
+    t_object = Twrapper(constants.CONSUMER_KEY, constants.CONSUMER_SECRET)
     trends = t_object.get_trends(1)
-
     for trend in trends:
+        print(" " + trend._get_name())
+    """
+    for trend in trends:
+        print("Trend: %s" % trend._get_name())
+        get_info_for_trends(trend)
+    """
+
+if __name__ == "__main__":
+    main()
